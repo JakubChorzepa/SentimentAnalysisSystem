@@ -17,6 +17,24 @@ services:
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    healthcheck:
+      test:
+        ["CMD", "kafka-broker-api-versions", "--bootstrap-server", "kafka:9092"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+  kafka-create-topic:
+    image: confluentinc/cp-kafka:7.4.0
+    depends_on:
+      kafka:
+        condition: service_healthy
+    command: |
+      bash -c "
+      sleep 10
+      kafka-topics --bootstrap-server kafka:9092 --topic reddit-mental-health-posts --create --partitions 3 --replication-factor 1
+      echo 'Topic created successfully'
+      exit 0
+      "
 
   postgres:
     image: postgres:13

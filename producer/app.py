@@ -20,7 +20,7 @@ conf = {
 }
 
 producer = Producer(**conf)
-topic_name = 'reddit-posts'
+topic_name = 'reddit-mental-health-posts'
 
 def generate_datetime_now():
     return datetime.now().strftime('[%Y-%m-%d %H:%M:%S]')
