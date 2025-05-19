@@ -15,7 +15,10 @@ services:
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_LISTENERS: INTERNAL://0.0.0.0:9093,EXTERNAL://0.0.0.0:9092
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka:9093,EXTERNAL://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
     healthcheck:
       test:
@@ -30,10 +33,16 @@ services:
         condition: service_healthy
     command: |
       bash -c "
-      sleep 10
-      kafka-topics --bootstrap-server kafka:9092 --topic reddit-mental-health-posts --create --partitions 3 --replication-factor 1
-      echo 'Topic created successfully'
-      exit 0
+      for i in {1..10}; do
+        if kafka-topics --bootstrap-server kafka:9093 --list; then
+          kafka-topics --bootstrap-server kafka:9093 --topic reddit-mental-health-posts --create --partitions 3 --replication-factor 1
+          echo 'Topic created successfully'
+          exit 0
+        fi
+        sleep 5
+      done
+      echo 'Failed to create topic'
+      exit 1
       "
 
   postgres:
