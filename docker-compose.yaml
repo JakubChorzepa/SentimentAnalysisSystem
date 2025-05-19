@@ -42,5 +42,7 @@ services:
       POSTGRES_USER: reddit_user
       POSTGRES_PASSWORD: reddit_pass
       POSTGRES_DB: reddit_db
+    volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/10-init.sql
     ports:
       - 5440:5440
