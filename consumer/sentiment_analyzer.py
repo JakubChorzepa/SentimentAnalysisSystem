@@ -21,10 +21,10 @@ class SentimentAnalyzer:
     def _create_pipeline():
         return pipeline(
             "sentiment-analysis",
-            model="finiteautomata/bertweet-base-sentiment-analysis",
+            model="waimoe/mental-health-sentiment-analysis-model",
             top_k=None,
             truncation=True,
-            max_length=128,
+            max_length=1024,
         )
 
     def analyze(self, text):
