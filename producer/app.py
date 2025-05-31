@@ -34,7 +34,7 @@ def delivery_report(err, msg):
 
 def stream_reddit_posts():
     TEXT_CONTENT_MIN_LENGTH = 20
-    watched_subreddits_list = ['MentalHealth', 'MentalHealthUK', 'depression', 'anxiety', 'mentalillness', 'socialanxiety']
+    watched_subreddits_list = ['MentalHealth', 'MentalHealthUK', 'depression', 'anxiety', 'mentalillness', 'socialanxiety', 'MentalHealthSupport', 'bipolar', 'BPD']
     print(f"{generate_datetime_now()} Watching subreddits: {watched_subreddits_list}")
     subreddits = reddit.subreddit('+'.join(watched_subreddits_list))
     for submission in subreddits.stream.submissions(skip_existing=True):
