@@ -2,11 +2,12 @@ from dotenv import load_dotenv
 import os
 from kafka_consumer import KafkaConsumer
 from sentiment_analyzer import SentimentAnalyzer
+from postgres_client import PostgresClient
 
 load_dotenv("../.env")
 
 
-def create_callback(sentiment_analyzer):
+def create_callback(sentiment_analyzer, postgres_client):
     def process_message(post_data):
         print(f"Received message: {post_data}")
 
@@ -23,6 +24,8 @@ def create_callback(sentiment_analyzer):
 
             post_data['label'] = top_sentiment['label']
             post_data['score'] = top_sentiment['score']
+
+            postgres_client.insert_post(post_data)
             
         except Exception as e:
             print(f"Analysis error : {e}")
@@ -40,8 +43,17 @@ if __name__ == "__main__":
         'auto.offset.reset': 'earliest'
     }
 
+    postgres_conf = {
+        'host': 'localhost',
+        'database': 'reddit_db',
+        'user': 'reddit_user',
+        'password': 'reddit_pass',
+        'port': 5440
+    }
+
     consumer = KafkaConsumer(kafka_conf, KAFKA_TOPIC)
-    processor = create_callback(sentiment_analyzer)
+    postgres_client = PostgresClient(**postgres_conf)
+    processor = create_callback(sentiment_analyzer, postgres_client)
     
     try:
         consumer.start_consuming(processor)
@@ -49,4 +61,5 @@ if __name__ == "__main__":
         print("\nZatrzymywanie konsumenta...")
     finally:
         consumer.stop()
+        postgres_client.close()
         print("Konsument zatrzymany.")

@@ -54,4 +54,4 @@ services:
     volumes:
       - ./init.sql:/docker-entrypoint-initdb.d/10-init.sql
     ports:
-      - 5440:5440
+      - 5440:5432
