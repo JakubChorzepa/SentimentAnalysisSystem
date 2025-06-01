@@ -208,6 +208,7 @@ if not filtered_df.empty:
         for i, row in top_confident.iterrows():
             with st.expander(f"{row['title']} (pewność: {row['sentiment_score']:.2f})"):
                 st.markdown(f"**Subreddit:** r/{row['subreddit']}")
+                st.markdown(f"**Klasyfikacja:** {row['sentiment_label']}")
                 st.markdown(f"**Data:** {row['created_utc']}")
                 st.markdown(f"**Tekst:**")
                 st.write(row['text'][:500] + "..." if len(row['text']) > 500 else row['text'])
@@ -219,6 +220,7 @@ if not filtered_df.empty:
         for i, row in latest_posts.iterrows():
             with st.expander(f"{row['title']} ({row['created_utc'].strftime('%Y-%m-%d')})"):
                 st.markdown(f"**Pewność klasyfikacji:** {row['sentiment_score']:.2f}")
+                st.markdown(f"**Klasyfikacja:** {row['sentiment_label']}")
                 st.markdown(f"**Subreddit:** r/{row['subreddit']}")
                 st.markdown(f"**Tekst:**")
                 st.write(row['text'][:500] + "..." if len(row['text']) > 500 else row['text'])
