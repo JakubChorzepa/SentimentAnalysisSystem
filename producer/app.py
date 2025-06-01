@@ -6,7 +6,14 @@ from dotenv import load_dotenv
 import json
 from datetime import datetime
 
-load_dotenv("../.env")
+
+IS_DOCKER = os.getenv('DOCKER_ENV') == 'true'
+
+env_path = '../.env' if not IS_DOCKER else '.env'
+load_dotenv(env_path)
+
+print(f"{datetime.now().strftime('[%Y-%m-%d %H:%M:%S]')} Loading environment from: {env_path}")
+
 
 reddit = praw.Reddit(
     client_id=os.getenv('REDDIT_CLIENT_ID'),
@@ -15,8 +22,11 @@ reddit = praw.Reddit(
 )
 
 conf = {
-    'bootstrap.servers': 'localhost:9092',
-    'client.id': 'reddit-producer'
+    'bootstrap.servers': 'kafka:9093' if IS_DOCKER else 'localhost:9092',
+    'client.id': 'reddit-producer',
+    'message.timeout.ms': 5000,
+    'retries': 5,
+    'retry.backoff.ms': 1000
 }
 
 producer = Producer(**conf)
@@ -62,6 +72,8 @@ def stream_reddit_posts():
 
 
 if(__name__ == '__main__'):
+    print(f"IS_DOCKER: {IS_DOCKER}")
+    print(f"Bootstrap servers: {conf['bootstrap.servers']}")
     while True:
         try:
             stream_reddit_posts()

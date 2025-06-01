@@ -1,6 +1,5 @@
 import json
 from confluent_kafka import Consumer, KafkaError, KafkaException
-from time import sleep
 
 """
   KafkaConsumer class for consuming messages from a Kafka topic.

@@ -5,6 +5,8 @@ services:
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
+    networks:
+      - kafka-network
 
   kafka:
     image: confluentinc/cp-kafka:7.4.0
@@ -21,29 +23,27 @@ services:
       KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
     healthcheck:
-      test:
-        ["CMD", "kafka-broker-api-versions", "--bootstrap-server", "kafka:9092"]
+      test: ["CMD", "kafka-broker-api-versions", "--bootstrap-server", "kafka:9093"]
       interval: 10s
       timeout: 5s
       retries: 3
+    networks:
+      - kafka-network
+
   kafka-create-topic:
     image: confluentinc/cp-kafka:7.4.0
     depends_on:
       kafka:
         condition: service_healthy
-    command: |
+    command: >
       bash -c "
-      for i in {1..10}; do
-        if kafka-topics --bootstrap-server kafka:9093 --list; then
-          kafka-topics --bootstrap-server kafka:9093 --topic reddit-mental-health-posts --create --partitions 3 --replication-factor 1
-          echo 'Topic created successfully'
-          exit 0
-        fi
-        sleep 5
-      done
-      echo 'Failed to create topic'
-      exit 1
-      "
+      sleep 15;
+      kafka-topics --bootstrap-server kafka:9093 --create --if-not-exists
+      --topic reddit-mental-health-posts
+      --partitions 3
+      --replication-factor 1"
+    networks:
+      - kafka-network
 
   postgres:
     image: postgres:13
@@ -52,6 +52,41 @@ services:
       POSTGRES_PASSWORD: reddit_pass
       POSTGRES_DB: reddit_db
     volumes:
-      - ./init.sql:/docker-entrypoint-initdb.d/10-init.sql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
       - 5440:5432
+    networks:
+      - kafka-network
+
+  reddit-producer:
+    build:
+      context: ./producer
+      dockerfile: Dockerfile
+    volumes:
+      - ./.env:/app/.env
+    environment:
+      - DOCKER_ENV=true
+    depends_on:
+      - kafka
+      - kafka-create-topic
+    networks:
+      - kafka-network
+
+  reddit-consumer:
+    build:
+      context: ./consumer
+      dockerfile: Dockerfile
+    volumes:
+      - ./.env:/app/.env
+    environment:
+      - DOCKER_ENV=true
+    depends_on:
+      - kafka
+      - postgres
+      - kafka-create-topic
+    networks:
+      - kafka-network
+
+networks:
+  kafka-network:
+    driver: bridge

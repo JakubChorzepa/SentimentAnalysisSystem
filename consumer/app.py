@@ -4,7 +4,10 @@ from kafka_consumer import KafkaConsumer
 from sentiment_analyzer import SentimentAnalyzer
 from postgres_client import PostgresClient
 
-load_dotenv("../.env")
+IS_DOCKER = os.getenv('DOCKER_ENV') == 'true'
+
+env_path = '../.env' if not IS_DOCKER else '.env'
+load_dotenv(env_path)
 
 
 def create_callback(sentiment_analyzer, postgres_client):
@@ -38,17 +41,20 @@ if __name__ == "__main__":
     KAFKA_TOPIC = 'reddit-mental-health-posts'
     
     kafka_conf = {
-        'bootstrap.servers': 'localhost:9092',
+        'bootstrap.servers': 'kafka:9093' if IS_DOCKER else 'localhost:9092',
         'group.id': 'mental-health-consumer',
-        'auto.offset.reset': 'earliest'
+        'auto.offset.reset': 'earliest',
+        'message.timeout.ms': 5000,
+        'retries': 5,
+        'retry.backoff.ms': 1000
     }
 
     postgres_conf = {
-        'host': 'localhost',
+        'host': 'postgres' if IS_DOCKER else 'localhost',
         'database': 'reddit_db',
         'user': 'reddit_user',
         'password': 'reddit_pass',
-        'port': 5440
+        'port': 5432 if IS_DOCKER else 5440
     }
 
     consumer = KafkaConsumer(kafka_conf, KAFKA_TOPIC)
