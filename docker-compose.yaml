@@ -23,7 +23,8 @@ services:
       KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
     healthcheck:
-      test: ["CMD", "kafka-broker-api-versions", "--bootstrap-server", "kafka:9093"]
+      test:
+        ["CMD", "kafka-broker-api-versions", "--bootstrap-server", "kafka:9093"]
       interval: 10s
       timeout: 5s
       retries: 3
@@ -53,6 +54,7 @@ services:
       POSTGRES_DB: reddit_db
     volumes:
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+      - postgres_data:/var/lib/postgresql/data
     ports:
       - 5440:5432
     networks:
@@ -90,3 +92,5 @@ services:
 networks:
   kafka-network:
     driver: bridge
+volumes:
+  postgres_data:
